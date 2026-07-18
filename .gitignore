@@ -1,0 +1,8 @@
+# Local data output
+*.txt
+*.log
+
+# Python environment
+__pycache__/
+*.py[cod]
+.venv/
