@@ -1,17 +1,35 @@
-# Keystroke Analytics Framework
+# Modular Keystroke Analytics Framework
 
-An academic framework designed to safely capture, buffer, and log keyboard input events. This project demonstrates optimized I/O caching to mitigate performance overhead and introduces an architectural foundation for analyzing keystroke behaviors.
+An academic software engineering framework designed to demonstrate optimized system input event handling, volatile memory caching pipelines, and structural patterns for endpoint data analytics. 
 
-## Project Architecture
-The project is built modularly to separate low-level input hooking from storage logic:
-- `src/core/`: Intercepts system events and manages the volatile memory cache.
-- `src/processing/`: Commits optimized chunks of data to disk.
-- `tests/`: Holds unit tests to verify data integrity.
+This project shifts the focus away from basic script utilities toward a production-grade, modular architecture designed to solve performance bottleneck problems (High Disk I/O) associated with continuous telemetry capture.
 
-## Installation & Setup
-1. Create a virtual environment: `python -m venv .venv`
-2. Activate it and install dependencies: `pip install -r requirements.txt`
-3. Execute the project framework: `python src/main.py`
+---
 
-## Supported Inputs
-Refer to `keycodes.txt` for the baseline definitions mapped from the system's virtual key layout.
+## ─── Core Architecture ───
+
+The framework is decoupled into distinct processing layers to achieve separation of concerns, ensuring that the critical path of input interception is completely isolated from slower input/output (I/O) file system operations.
+
+```text
+               [ Hardware / OS Level Input Events ]
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  src/core/monitor.py                         │
+│  - Establishes native operating system event hooks           │
+│  - Sanitizes input streams & maps virtual key definitions     │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ (Sanitized String Token)
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  src/core/buffer.py                          │
+│  - Manages an in-memory (RAM) volatile data cache           │
+│  - Evaluates cache limits to prevent memory leaks            │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ (Thread-Safe Buffer Flush)
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                src/processing/storage.py                     │
+│  - Commits aggregated text blocks asynchronously             │
+│  - Enforces atomic file writes using UTF-8 streaming         │
+└──────────────────────────────────────────────────────────────┘
