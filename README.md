@@ -1,114 +1,341 @@
-# Modular Keystroke Analytics Framework
+# Modular Input Event Analytics Framework
 
-An academic software engineering framework designed to demonstrate optimized system input event handling, volatile memory caching pipelines, and structural patterns for endpoint data analytics. 
-
-This project shifts the focus away from basic script utilities toward a production-grade, modular architecture designed to solve performance bottleneck problems (High Disk I/O) associated with continuous telemetry capture.
+> **Academic Software Engineering Project**
+>
+> A modular framework that demonstrates efficient **system input event processing**, **in-memory buffering**, and **asynchronous storage architecture** for endpoint telemetry research. The project emphasizes clean software design and performance optimization rather than simple scripting.
 
 ---
 
-## ─── Core Architecture ───
+# Overview
 
-The framework is decoupled into distinct processing layers to achieve separation of concerns, ensuring that the critical path of input interception is completely isolated from slower input/output (I/O) file system operations.
+This project demonstrates how continuous system-generated input events can be processed efficiently by separating:
+
+- Event monitoring
+- Memory buffering
+- Storage operations
+
+Instead of writing every captured event directly to disk, the framework temporarily stores processed data in **volatile memory (RAM)** and performs **batched file operations**, significantly reducing disk I/O overhead.
+
+The implementation follows a modular architecture that promotes:
+
+- Separation of concerns
+- Maintainability
+- Testability
+- Extensibility
+
+---
+
+# Architecture
 
 ```text
-               [ Hardware / OS Level Input Events ]
-                               │
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  src/core/monitor.py                         │
-│  - Establishes native operating system event hooks           │
-│  - Sanitizes input streams & maps virtual key definitions     │
-└──────────────────────────────┬───────────────────────────────┘
-                               │ (Sanitized String Token)
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                  src/core/buffer.py                          │
-│  - Manages an in-memory (RAM) volatile data cache           │
-│  - Evaluates cache limits to prevent memory leaks            │
-└──────────────────────────────┬───────────────────────────────┘
-                               │ (Thread-Safe Buffer Flush)
-                               ▼
-┌──────────────────────────────────────────────────────────────┐
-│                src/processing/storage.py                     │
-│  - Commits aggregated text blocks asynchronously             │
-│  - Enforces atomic file writes using UTF-8 streaming         │
-└──────────────────────────────────────────────────────────────┘
+               Hardware / Operating System
+                        Input Events
+                              │
+                              ▼
+┌────────────────────────────────────────────────────┐
+│                src/core/monitor.py                 │
+│----------------------------------------------------│
+│ • Registers native input event hooks               │
+│ • Normalizes virtual key definitions               │
+│ • Produces sanitized event tokens                  │
+└──────────────────────────┬─────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────┐
+│                 src/core/buffer.py                 │
+│----------------------------------------------------│
+│ • Stores processed events in RAM                   │
+│ • Monitors configurable buffer thresholds          │
+│ • Prevents excessive disk writes                   │
+└──────────────────────────┬─────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────┐
+│            src/processing/storage.py               │
+│----------------------------------------------------│
+│ • Flushes buffered data                            │
+│ • Performs UTF-8 encoded file operations           │
+│ • Uses atomic write strategies                     │
+└────────────────────────────────────────────────────┘
+```
 
-─── Feature Set ───
-Modular Subsystems: Clean breakdown into core abstraction models, processing pipelines, and validation test suites.
+---
 
-Volatile Memory Caching: Implements an in-memory buffer constraint model that holds data in RAM, executing file writes only when the programmatic threshold is reached. This drastically reduces CPU overhead and hard drive degradation.
+# Key Features
 
-Virtual Key Code Normalization: Maps structural keys (e.g., Key.space, Key.enter) cleanly using static lookups to ensure legible text logging.
+## Modular Architecture
 
-Graceful Signal Interception: Implements keyboard interrupt handlers to automatically flush remaining data out of volatile RAM cache onto the disk prior to process termination.
+The framework is divided into independent layers, allowing each component to perform a single responsibility.
 
-Automated Testing Suite: Includes isolated unit test models executing data boundary checks, cache capacity triggers, and flush consistency checks.
+- Event Monitoring Layer
+- Buffer Management Layer
+- Storage Layer
+- Automated Testing Layer
 
-─── Directory Layout ───
-Plaintext
+---
+
+## In-Memory Buffering
+
+Instead of writing every event immediately to disk:
+
+- Events are accumulated in RAM.
+- Data is written only after the buffer reaches a predefined threshold.
+- Reduces disk I/O operations.
+- Improves runtime efficiency.
+- Demonstrates caching strategies commonly used in high-performance systems.
+
+---
+
+## Virtual Key Normalization
+
+Special keyboard keys are translated into readable representations.
+
+Examples include:
+
+- Space
+- Enter
+- Tab
+- Backspace
+- Modifier keys
+
+This improves the readability of stored event data.
+
+---
+
+## Graceful Shutdown Handling
+
+Before program termination:
+
+- Remaining buffered data is flushed safely.
+- Prevents accidental data loss.
+- Demonstrates proper cleanup procedures.
+
+---
+
+## Automated Testing
+
+The project includes isolated unit tests for validating:
+
+- Buffer capacity
+- Flush triggers
+- Memory consistency
+- Boundary conditions
+
+---
+
+# Project Structure
+
+```text
 keystroke_analytics/
 │
-├── .gitignore               # Excludes runtime metrics, dependencies, and data logs from VC
-├── README.md                # Engineering documentation and framework layout
-├── requirements.txt         # Defined package dependencies
-├── keycodes.txt             # Target OS Virtual Key Code mapping reference documentation
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── keycodes.txt
 │
-├── src/                     # Core application source root
+├── src/
 │   ├── __init__.py
-│   ├── main.py              # Operational runtime execution entrypoint
+│   ├── main.py
 │   │
-│   ├── core/                # Core Event Capturing Engine
+│   ├── core/
 │   │   ├── __init__.py
-│   │   ├── monitor.py       # Intercepts native API callbacks and translates layouts
-│   │   └── buffer.py        # Validates and holds memory queues dynamically
+│   │   ├── monitor.py
+│   │   └── buffer.py
 │   │
-│   └── processing/          # Storage Operations Engine
+│   └── processing/
 │       ├── __init__.py
-│       └── storage.py       # Manages file streaming, encoding, and disk structures
+│       └── storage.py
 │
-└── tests/                   # Independent Validation Suite
+└── tests/
     ├── __init__.py
-    └── test_buffer.py       # Validates volatile buffer behavior and edge cases
-─── Verification & Setup ───
-Prerequisites
-Python 3.10 or higher
+    └── test_buffer.py
+```
 
-Operating system-level permissions allowing global input hooking events (e.g., root access on Linux distributions, or IDE accessibility clearance on macOS).
+---
 
-1. Initialization and Environment Isolation
-From the root project directory, spin up a secure virtual python workspace:
+# Module Responsibilities
 
-Bash
-# Create the virtual directory environment
+## `monitor.py`
+
+Responsible for:
+
+- Registering operating-system input hooks
+- Capturing input events
+- Translating raw virtual key codes
+- Producing normalized event tokens
+
+---
+
+## `buffer.py`
+
+Responsible for:
+
+- Managing volatile RAM storage
+- Maintaining configurable buffer sizes
+- Triggering flush operations
+- Preventing excessive disk writes
+
+---
+
+## `storage.py`
+
+Responsible for:
+
+- Writing buffered data to persistent storage
+- UTF-8 encoding support
+- Atomic file write operations
+- Storage consistency
+
+---
+
+# Installation
+
+## Prerequisites
+
+- Python **3.10+**
+- Required operating system permissions for global input event monitoring
+  - Windows
+  - Linux
+  - macOS (Accessibility permissions)
+
+---
+
+## Create a Virtual Environment
+
+### Windows
+
+```bash
 python -m venv .venv
+.venv\Scripts\activate
+```
 
-# Activate the workspace environment (Windows PowerShell)
-.venv\Scripts\Activate.ps1
+### Linux / macOS
 
-# Activate the workspace environment (Linux / macOS)
+```bash
+python -m venv .venv
 source .venv/bin/activate
-2. Dependency Resolution
-Install the required platform abstraction libraries compiled in the specification manifest:
+```
 
-Bash
+---
+
+## Install Dependencies
+
+```bash
 pip install -r requirements.txt
-3. Executing Automated Test Suites
-Run the isolated automated test cases to evaluate core processing layers before runtime operations:
+```
 
-Bash
+---
+
+# Running Tests
+
+Execute the automated validation suite:
+
+```bash
 python -m unittest discover tests
-4. Running the Framework Application
-Launch the main application deployment module:
+```
 
-Bash
+---
+
+# Running the Application
+
+Start the framework using:
+
+```bash
 python src/main.py
-─── Cybersecurity Context & Extension ───
-This software architecture has been created exclusively for academic research. In modern endpoint protection contexts, unmanaged global hooking metrics represent a significant vulnerability.
+```
 
-Future Academic Extensions
-For advanced thesis completion, this framework is structured to easily support the integration of:
+---
 
-Keystroke Biometric Verification: Upgrading monitor.py to calculate typing flight/dwell times for identity analysis.
+# Performance Design
 
-Data Loss Prevention (DLP) Scanners: Intercepting the buffer.py queue to scan for regular expression structural anomalies like unexpected credit card formats before logging.
+The project demonstrates an optimized data-processing pipeline.
+
+Traditional approach:
+
+```
+Input Event
+      ↓
+Immediate Disk Write
+      ↓
+High Disk I/O
+```
+
+Framework approach:
+
+```
+Input Event
+      ↓
+Memory Buffer
+      ↓
+Threshold Reached
+      ↓
+Single Batch Write
+```
+
+### Benefits
+
+- Lower disk activity
+- Reduced CPU overhead
+- Better scalability
+- Improved maintainability
+- Cleaner architecture
+
+---
+
+# Testing Coverage
+
+The included unit tests validate:
+
+- Buffer initialization
+- Cache threshold behavior
+- Flush consistency
+- Empty buffer handling
+- Boundary conditions
+- Memory integrity
+
+---
+
+# Future Enhancements
+
+The architecture is intentionally modular and can be extended with additional capabilities such as:
+
+- Keystroke biometric analysis
+- Typing rhythm (flight and dwell time) measurements
+- Data Loss Prevention (DLP) pattern scanning
+- Event encryption before storage
+- Database-backed storage
+- Multi-threaded processing
+- Cross-platform abstraction layers
+- Performance benchmarking
+- Logging and monitoring dashboards
+
+---
+
+# Educational Purpose
+
+This project is intended solely for:
+
+- Software engineering education
+- Performance optimization research
+- Modular architecture demonstrations
+- Operating system event-processing concepts
+- Endpoint telemetry research
+
+It is designed to illustrate architectural patterns, buffering techniques, and clean software design in a controlled academic environment.
+
+---
+
+# Technologies Used
+
+- Python 3
+- Object-Oriented Programming (OOP)
+- File I/O
+- Memory Buffering
+- Unit Testing
+- Modular Software Architecture
+
+---
+
+# License
+
+This repository is intended for educational and academic purposes only. Users are responsible for ensuring that any experimentation complies with applicable laws, organizational policies, and ethical guidelines.
